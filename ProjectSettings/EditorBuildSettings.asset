@@ -6,8 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Complete Living Room_Built-In/Scene/Demo.unity
-    guid: efeb53f8394f8c3478d239ade4846820
+    path: Assets/MRTK/Examples/Demos/HandTracking/Scenes/HandInteractionExamples.unity
+    guid: 3dd4a396b5225f8469b9a1eb608bfa57
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: b5f9845d9b31da4488fd061ea0bba3cb, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 45e2fe96d04a7c041926364e6dc0147a, type: 2}
