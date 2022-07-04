@@ -21,7 +21,7 @@ namespace Oculus.Voice.Demo.BuiltInDemo
     /// </summary>
     public class TimerController : MonoBehaviour
     {
-        private float _time = 0; // [sec] current time of the countdown timer.
+        private double _time = 0; // [sec] current time of the countdown timer.
         private bool _timerExist = false;
         private bool _timerRunning = false;
 
@@ -190,7 +190,7 @@ namespace Oculus.Voice.Demo.BuiltInDemo
         /// Returns the remaining time (in sec) of the countdown timer.
         /// </summary>
         /// <returns></returns>
-        public float GetRemainingTime()
+        public double GetRemainingTime()
         {
             return _time;
         }
@@ -201,7 +201,13 @@ namespace Oculus.Voice.Demo.BuiltInDemo
         /// <returns></returns>
         public string GetFormattedTimeFromSeconds()
         {
-            return TimeSpan.FromSeconds(_time).ToString();
+            if (_time >= TimeSpan.MaxValue.TotalSeconds)
+            {
+                _time = TimeSpan.MaxValue.TotalSeconds - 1;
+                Log("Error: Hit max time");
+            }
+            TimeSpan span = TimeSpan.FromSeconds(_time);
+            return $"{Math.Floor(span.TotalHours)}:{span.Minutes:00}:{span.Seconds:00}.{Math.Floor(span.Milliseconds/100f)}";
         }
 
         /// <summary>
@@ -211,10 +217,10 @@ namespace Oculus.Voice.Demo.BuiltInDemo
         /// <param name="time">The parsed time</param>
         /// <returns>The parsed time in seconds or the current value of _time</returns>
         /// <exception cref="ArgumentException"></exception>
-        private bool ParseTime(string[] entityValues, out float time)
+        private bool ParseTime(string[] entityValues, out double time)
         {
             time = _time;
-            if (entityValues.Length > 0 && float.TryParse(entityValues[0], out time))
+            if (entityValues.Length > 0 && double.TryParse(entityValues[0], out time))
             {
                 if (entityValues.Length < 2)
                 {

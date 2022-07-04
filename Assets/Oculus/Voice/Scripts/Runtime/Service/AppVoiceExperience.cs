@@ -141,8 +141,10 @@ namespace Oculus.Voice
             }
         }
 
-        private void OnEnable()
+        protected override void OnEnable()
         {
+            base.OnEnable();
+
             if(null == voiceServiceImpl) InitVoiceSDK();
 
             #if UNITY_ANDROID && !UNITY_EDITOR

@@ -8,7 +8,6 @@ Unless required by applicable law or agreed to in writing, the Utilities SDK dis
 under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 ANY KIND, either express or implied. See the License for the specific language governing
 permissions and limitations under the License.
-
 ************************************************************************************/
 
 using UnityEngine;
@@ -250,9 +249,10 @@ public class OVRGazePointer : OVRCursor {
     // Disable/Enable child elements when we show/hide the cursor. For performance reasons.
     void Hide()
     {
-        foreach (Transform child in transform)
+        var cachedTransform = transform;
+        for (int i = 0; i < cachedTransform.childCount; i++)
         {
-            child.gameObject.SetActive(false);
+	        cachedTransform.GetChild(i).gameObject.SetActive(false);
         }
         if (GetComponent<Renderer>())
             GetComponent<Renderer>().enabled = false;
@@ -261,9 +261,10 @@ public class OVRGazePointer : OVRCursor {
 
     void Show()
     {
-        foreach (Transform child in transform)
+        var cachedTransform = transform;
+        for (int i = 0; i < cachedTransform.childCount; i++)
         {
-            child.gameObject.SetActive(true);
+	        cachedTransform.GetChild(i).gameObject.SetActive(true);
         }
         if (GetComponent<Renderer>())
             GetComponent<Renderer>().enabled = true;

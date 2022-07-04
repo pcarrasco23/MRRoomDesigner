@@ -48,9 +48,12 @@ namespace Facebook.WitAi.Configuration
 
         [Tooltip("The length of the individual samples read from the audio source")]
         [Range(10, 500)] [SerializeField] public int sampleLengthInMs = 10;
-        
+
         [Tooltip("The total audio data that should be buffered for lookback purposes on sound based activations.")]
         [SerializeField] public float micBufferLengthInSeconds = 1;
+
+        [Tooltip("The maximum amount of concurrent requests that can occur")]
+        [Range(1, 10)] [SerializeField] public int maxConcurrentRequests = 5;
 
         [Header("Custom Transcription")]
         [Tooltip(
@@ -60,5 +63,8 @@ namespace Facebook.WitAi.Configuration
 
         [Tooltip("A custom provider that returns text to be used for nlu processing on activation instead of sending audio.")]
         [SerializeField] public CustomTranscriptionProvider customTranscriptionProvider;
+
+        [Tooltip("If always record is set the mic will fill the mic data buffer as long as the component is enabled in the scene.")]
+        public bool alwaysRecord;
     }
 }

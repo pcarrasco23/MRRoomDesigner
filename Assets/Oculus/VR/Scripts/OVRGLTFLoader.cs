@@ -85,6 +85,7 @@ public class OVRGLTFLoader
 	private static readonly Vector3 GLTFToUnityTangent = new Vector4(-1, 1, 1, -1);
 
 	private Shader m_Shader = null;
+	private Shader m_AlphaBlendShader = null;
 
 	public OVRGLTFLoader(string fileName)
 	{
@@ -101,6 +102,7 @@ public class OVRGLTFLoader
 		OVRGLTFScene scene = new OVRGLTFScene();
 		m_Nodes = new List<GameObject>();
 
+		int rootNodeId = 0;
 		if (ValidateGLB(m_glbStream))
 		{
 			byte[] jsonChunkData = ReadChunk(m_glbStream, OVRChunkType.JSON);
@@ -123,14 +125,23 @@ public class OVRGLTFLoader
 					Debug.LogWarning("A shader was not set before loading the model. Using default mobile shader.");
 					m_Shader = Shader.Find("Legacy Shaders/Diffuse");
 				}
+				if (m_AlphaBlendShader == null)
+				{
+					Debug.LogWarning("An alpha blend shader was not set before loading the model. Using default transparent shader.");
+					m_AlphaBlendShader = Shader.Find("Unlit/Transparent");
+				}
 
-				LoadGLTF(loadMips);
+				rootNodeId = LoadGLTF(loadMips);
 			}
 		}
 		m_glbStream.Close();
 
 		scene.nodes = m_Nodes;
-		scene.root = m_Nodes[0];
+		scene.root = new GameObject("GLB Scene Root");
+		foreach (GameObject node in m_Nodes)
+		{
+			node.transform.SetParent(scene.root.transform);
+		}
 
 		scene.root.transform.Rotate(Vector3.up, 180.0f);
 
@@ -140,6 +151,11 @@ public class OVRGLTFLoader
 	public void SetModelShader(Shader shader)
 	{
 		m_Shader = shader;
+	}
+
+	public void SetModelAlphaBlendShader(Shader shader)
+	{
+		m_AlphaBlendShader = shader;
 	}
 
 	private bool ValidateGLB(Stream glbStream)
@@ -207,7 +223,7 @@ public class OVRGLTFLoader
 		return true;
 	}
 
-	private void LoadGLTF(bool loadMips)
+	private int LoadGLTF(bool loadMips)
 	{
 		if (m_jsonData == null)
 		{
@@ -232,11 +248,15 @@ public class OVRGLTFLoader
 		// Limit loading to just the first scene in the glTF
 		var mainScene = scenes[0];
 		var rootNodes = mainScene["nodes"].AsArray;
-		for (int i = 0; i < rootNodes.Count; i++)
+
+		// Load all nodes (some models like e.g. laptops use multiple nodes)
+		foreach (JSONNode rootNode in rootNodes)
 		{
-			int nodeId = rootNodes[i].AsInt;
-			ProcessNode(m_jsonData["nodes"][nodeId], nodeId, loadMips);
+			int rootNodeId = rootNode.AsInt;
+			ProcessNode(m_jsonData["nodes"][rootNodeId], rootNodeId, loadMips);
 		}
+
+		return rootNodes[0].AsInt;
 	}
 
 	private void ProcessNode(JSONNode node, int nodeId, bool loadMips)
@@ -251,6 +271,13 @@ public class OVRGLTFLoader
 				m_Nodes[childId].transform.SetParent(m_Nodes[nodeId].transform);
 				ProcessNode(m_jsonData["nodes"][childId], childId, loadMips);
 			}
+		}
+
+		string nodeName = node["name"].ToString();
+		if (nodeName.Contains("batteryIndicator"))
+		{
+			GameObject.Destroy(m_Nodes[nodeId]);
+			return;
 		}
 
 		if (node["mesh"] != null)
@@ -530,6 +557,10 @@ public class OVRGLTFLoader
 		OVRMaterialData matData = new OVRMaterialData();
 
 		var jsonMaterial = m_jsonData["materials"][matId];
+
+		var jsonAlphaMode = jsonMaterial["alphaMode"];
+		bool alphaBlendMode = jsonAlphaMode != null && jsonAlphaMode.Value == "BLEND";
+
 		var jsonPbrDetails = jsonMaterial["pbrMetallicRoughness"];
 
 		var jsonBaseColor = jsonPbrDetails["baseColorTexture"];
@@ -548,7 +579,7 @@ public class OVRGLTFLoader
 			}
 		}
 
-		matData.shader = m_Shader;
+		matData.shader = alphaBlendMode ? m_AlphaBlendShader : m_Shader;
 		return matData;
 	}
 

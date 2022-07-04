@@ -69,9 +69,9 @@ public class DebugUIBuilder : MonoBehaviour
   public delegate void OnSlider(float f);
   public delegate bool ActiveUpdate();
 
-  private const float elementSpacing = 16.0f;
-  public const float marginH = 16.0f;
-  public const float marginV = 16.0f;
+  public float elementSpacing = 16.0f;
+  public float marginH = 16.0f;
+  public float marginV = 16.0f;
   private Vector2[] insertPositions;
   private List<RectTransform>[] insertedElements;
   private Vector3 menuOffset;
@@ -82,6 +82,7 @@ public class DebugUIBuilder : MonoBehaviour
 
   public LaserPointer.LaserBeamBehavior laserBeamBehavior;
   public bool isHorizontal = false;
+  public bool usePanelCentricRelayout = false;
 
   public void Awake()
   {
@@ -192,8 +193,9 @@ public class DebugUIBuilder : MonoBehaviour
 
   // Currently a slow brute-force method that lays out every element.
   // As this is intended as a debug UI, it might be fine, but there are many simple optimizations we can make.
-  private void Relayout()
+  private void StackedRelayout()
   {
+
     for (int panelIdx = 0; panelIdx < targetContentPanels.Length; ++panelIdx)
     {
       RectTransform canvasRect = targetContentPanels[panelIdx].GetComponent<RectTransform>();
@@ -219,8 +221,58 @@ public class DebugUIBuilder : MonoBehaviour
       canvasRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, maxWidth);
       canvasRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, -y + marginV);
     }
+
   }
 
+  private void PanelCentricRelayout(){
+    if(!isHorizontal){
+      Debug.Log("Error:Panel Centeric relayout is implemented only for horizontal panels");
+      return;
+    }
+
+    for (int panelIdx = 0; panelIdx < targetContentPanels.Length; ++panelIdx)
+    {
+      RectTransform canvasRect = targetContentPanels[panelIdx].GetComponent<RectTransform>();
+      List<RectTransform> elems = insertedElements[panelIdx];
+      int elemCount = elems.Count;
+      float x = marginH;
+      float y = -marginV;
+      float maxWidth = x;
+      for (int elemIdx = 0; elemIdx < elemCount; ++elemIdx)
+      {
+        RectTransform r = elems[elemIdx];
+        maxWidth += (r.rect.width + elementSpacing);
+      }
+      maxWidth -=elementSpacing;
+      maxWidth += marginH;
+      float totalmaxWidth = maxWidth;
+      x = -0.5f * totalmaxWidth;
+      y = -marginV;
+      //Offset the UI  elements half of total lenght of the panel.
+      for (int elemIdx = 0; elemIdx < elemCount; ++elemIdx)
+      {
+        RectTransform r = elems[elemIdx];
+        if(elemIdx ==0){
+          x += marginH;
+        }
+        x += 0.5f*r.rect.width;
+        r.anchoredPosition = new Vector2(x , y);
+        x +=r.rect.width*0.5f+elementSpacing;
+        maxWidth = Mathf.Max(r.rect.width + 2 * marginH, maxWidth);
+      }
+      canvasRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, maxWidth);
+      canvasRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, -y + marginV);
+    }
+  }
+
+  private void Relayout()
+  {
+    if(usePanelCentricRelayout){
+      PanelCentricRelayout();
+    }else{
+      StackedRelayout();
+    }
+  }
   private void AddRect(RectTransform r, int targetCanvas)
   {
     if (targetCanvas > targetContentPanels.Length)
@@ -249,12 +301,14 @@ public class DebugUIBuilder : MonoBehaviour
     if(handler != null)
       button.onClick.AddListener(delegate { handler(); });
 
-    if(highResolutionText){
-      ((TextMeshProUGUI)(buttonRT.GetComponentsInChildren(typeof(TextMeshProUGUI), true)[0])).text = label;
-    }
-    else{
-      ((Text)(buttonRT.GetComponentsInChildren(typeof(Text), true)[0])).text = label;
-    }
+
+      if(highResolutionText){
+        ((TextMeshProUGUI)(buttonRT.GetComponentsInChildren(typeof(TextMeshProUGUI), true)[0])).text = label;
+      }
+      else{
+        ((Text)(buttonRT.GetComponentsInChildren(typeof(Text), true)[0])).text = label;
+      }
+
     AddRect(buttonRT, targetCanvas);
     return buttonRT;
   }

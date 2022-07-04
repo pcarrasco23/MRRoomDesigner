@@ -60,6 +60,7 @@ public class OVROverlay : MonoBehaviour
 		ReconstructionPassthrough = OVRPlugin.OverlayShape.ReconstructionPassthrough,
 		SurfaceProjectedPassthrough = OVRPlugin.OverlayShape.SurfaceProjectedPassthrough,
 		Fisheye = OVRPlugin.OverlayShape.Fisheye,
+		KeyboardHandsPassthrough = OVRPlugin.OverlayShape.KeyboardHandsPassthrough,
 	}
 
 	/// <summary>
@@ -111,6 +112,9 @@ public class OVROverlay : MonoBehaviour
 
 	//Warning: Developers should only use this supersample setting if they absolutely have the budget and need for it. It is extremely expensive, and will not be relevant for most developers.
 	public bool useExpensiveSuperSample = false;
+
+	//Warning: Developers should only use this sharpening setting if they absolutely have the budget and need for it. It is extremely expensive, and will not be relevant for most developers.
+	public bool useExpensiveSharpen = false;
 
 	//Property that can hide overlays when required. Should be false when present, true when hidden.
 	public bool hidden = false;
@@ -170,6 +174,14 @@ public class OVROverlay : MonoBehaviour
 	[Tooltip("When checked, the layer will use bicubic filtering")]
 	public bool useBicubicFiltering = false;
 
+	[Tooltip("When checked, the cubemap will retain the legacy rotation which was rotated 180 degrees around the Y axis comapred to Unity's definition of cubemaps. This setting will be deprecated in the near future, therefore it is recommended to fix the cubemap texture instead.")]
+	public bool useLegacyCubemapRotation = false;
+
+	[Tooltip("When checked, the layer will use efficient super sampling")]
+	public bool useEfficientSupersample = false;
+
+	[Tooltip("When checked, the layer will use efficient sharpen.  Must have anisotropic filtering and mipmaps enabled.")]
+	public bool useEfficientSharpen = false;
 
 	/// <summary>
 	/// Preview the overlay in the editor using a mesh renderer.
@@ -798,7 +810,8 @@ public class OVROverlay : MonoBehaviour
 			noTextures ? System.IntPtr.Zero : layerTextures[0].appTexturePtr,
 			noTextures ? System.IntPtr.Zero : layerTextures[rightEyeIndex].appTexturePtr,
 			layerId, frameIndex, pose.flipZ().ToPosef_Legacy(), scale.ToVector3f(), layerIndex, (OVRPlugin.OverlayShape)currentOverlayShape,
-			overrideTextureRectMatrix, textureRectMatrix, overridePerLayerColorScaleAndOffset, colorScale, colorOffset, useExpensiveSuperSample,
+			overrideTextureRectMatrix, textureRectMatrix, overridePerLayerColorScaleAndOffset, colorScale, colorOffset,
+			useExpensiveSuperSample, useBicubicFiltering, useEfficientSupersample, useEfficientSharpen, useExpensiveSharpen,
 			hidden);
 
 		prevOverlayShape = currentOverlayShape;
@@ -829,6 +842,7 @@ public class OVROverlay : MonoBehaviour
 	public static bool IsPassthroughShape(OverlayShape shape)
 	{
 		return shape == OverlayShape.ReconstructionPassthrough
+			|| shape == OverlayShape.KeyboardHandsPassthrough
 			|| shape == OverlayShape.SurfaceProjectedPassthrough;
 	}
 
@@ -876,11 +890,18 @@ public class OVROverlay : MonoBehaviour
 
 	void InitOVROverlay()
 	{
-		if (!OVRManager.isHmdPresent)
+#if USING_XR_SDK_OPENXR
+		if (!OVRPlugin.UnityOpenXR.Enabled)
 		{
-			enabled = false;
-			return;
+#endif
+			if (!OVRManager.isHmdPresent)
+			{
+				enabled = false;
+				return;
+			}
+#if USING_XR_SDK_OPENXR
 		}
+#endif
 
 		constructedOverlayXRDevice = OVRManager.XRDevice.Unknown;
 		if (OVRManager.loadedXRDevice == OVRManager.XRDevice.OpenVR)
@@ -973,13 +994,18 @@ public class OVROverlay : MonoBehaviour
 
 		if (currentOverlayShape == OverlayShape.Cubemap)
 		{
-#if UNITY_ANDROID && !UNITY_EDITOR
-			if (OVRPlugin.nativeXrApi != OVRPlugin.XrApi.OpenXR)
+			if (useLegacyCubemapRotation)
 			{
-				//HACK: VRAPI cubemaps assume are yawed 180 degrees relative to LibOVR.
+#if UNITY_ANDROID && !UNITY_EDITOR
 				pose.orientation = pose.orientation * Quaternion.AngleAxis(180, Vector3.up);
-			}
 #endif
+			}
+			else
+			{
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR
+				pose.orientation = pose.orientation * Quaternion.AngleAxis(180, Vector3.up);
+#endif
+			}
 			pose.position = headCamera.transform.position;
 		}
 

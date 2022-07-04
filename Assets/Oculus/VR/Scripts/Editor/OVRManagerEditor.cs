@@ -21,11 +21,10 @@ public class OVRManagerEditor : Editor
 	override public void OnInspectorGUI()
 	{
 		OVRRuntimeSettings runtimeSettings = OVRRuntimeSettings.GetRuntimeSettings();
+		OVRProjectConfig projectConfig = OVRProjectConfig.GetProjectConfig();
 
 #if UNITY_ANDROID
-		OVRProjectConfig projectConfig = OVRProjectConfig.GetProjectConfig();
 		OVRProjectConfigEditor.DrawTargetDeviceInspector(projectConfig);
-
 		EditorGUILayout.Space();
 #endif
 
@@ -52,10 +51,10 @@ public class OVRManagerEditor : Editor
 		}
 #endif
 
-#if UNITY_ANDROID
 		EditorGUILayout.Space();
         OVRProjectConfigEditor.DrawProjectConfigInspector(projectConfig);
 
+#if UNITY_ANDROID
 		EditorGUILayout.Space();
 		EditorGUILayout.LabelField("Mixed Reality Capture for Quest", EditorStyles.boldLabel);
 		EditorGUI.indentLevel++;
@@ -142,6 +141,7 @@ public class OVRManagerEditor : Editor
 
 			EditorGUI.indentLevel--;
 		}
+		EditorGUILayout.EndFoldoutHeaderGroup();
 #endif
 
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_ANDROID
@@ -165,6 +165,7 @@ public class OVRManagerEditor : Editor
 		EditorGUI.EndDisabledGroup();
 #endif
 #endif
+
 
 		if (modified)
 		{
