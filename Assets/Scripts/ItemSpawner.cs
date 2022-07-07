@@ -10,50 +10,29 @@ using UnityEngine;
 public class ItemSpawner : MonoBehaviour
 {
     public GameObject itemToSpawn;
-    public GameObject removeButtonPrefab;
     public bool UseGravity;
-    private GameObject removeButton;
-    private bool hideRemoveButton;
-    private float timeRemainHideRemove = 5;
     private GameObject spawnedItem;
-
-    public void Update()
-    {
-        if (removeButton != null)
-        {
-            if (hideRemoveButton)
-            {
-                if (timeRemainHideRemove > 0)
-                {
-                    timeRemainHideRemove -= Time.deltaTime;
-                }
-                else
-                {
-                    removeButton.SetActive(false);
-                }
-            }
-        }
-    }
 
     public void SpawnItem()
     {
-        var spawnedParentGameObject = Instantiate(new GameObject(), new Vector3(0, 0.2f, 1.0f), Quaternion.identity);
+        var spawnedParentGameObject = Instantiate(new GameObject(), new Vector3(2.0f, 0.2f, 1.0f), Quaternion.identity);
 
         spawnedItem = Instantiate(itemToSpawn, spawnedParentGameObject.transform);
 
-        var rigidBody = spawnedItem.AddComponent<Rigidbody>();
-        rigidBody.mass = 1;
-        rigidBody.drag = 0;
-        rigidBody.angularDrag = 0.05f;
-        rigidBody.useGravity = UseGravity;
+        if (UseGravity)
+        {
+            var rigidBody = spawnedItem.AddComponent<Rigidbody>();
+            rigidBody.mass = 1;
+            rigidBody.drag = 0;
+            rigidBody.angularDrag = 0f;
+            rigidBody.useGravity = UseGravity;
 
-        rigidBody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+            rigidBody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        }
 
         spawnedItem.AddComponent<NearInteractionGrabbable>();
 
         var objectManipulator = spawnedItem.AddComponent<Microsoft.MixedReality.Toolkit.UI.ObjectManipulator>();
-        objectManipulator.OnHoverEntered.AddListener(ManipulatorHoverEntered);
-        objectManipulator.OnHoverExited.AddListener(ManipulatorHoverExited);
 
         var rotationAxisConstraint = spawnedItem.AddComponent<RotationAxisConstraint>();
         rotationAxisConstraint.ConstraintOnRotation = Microsoft.MixedReality.Toolkit.Utilities.AxisFlags.XAxis | Microsoft.MixedReality.Toolkit.Utilities.AxisFlags.ZAxis;
@@ -74,31 +53,5 @@ public class ItemSpawner : MonoBehaviour
         minMaxConstraint.ScaleMaximum = 5.0f;
 
         spawnedItem.AddComponent<CursorContextObjectManipulator>();
-
-        removeButton = Instantiate(removeButtonPrefab, spawnedItem.transform);
-        var boxCollider = spawnedItem.transform.GetComponentInChildren<BoxCollider>();
-
-        // Rescale remove button
-        float size = removeButton.GetComponentInChildren<Renderer>().bounds.size.y;
-        Vector3 rescale = removeButton.transform.localScale;
-        rescale.y = 0.1f * rescale.y / size;
-        rescale.x = 0.1f * rescale.x / size;
-        rescale.z = 0.1f * rescale.z / size;
-        removeButton.transform.localScale = rescale;
-
-        removeButton.transform.position = new Vector3(spawnedItem.transform.position.x, 1.25f, spawnedItem.transform.position.z);
-        removeButton.SetActive(false);
-    }
-
-    private void ManipulatorHoverEntered(ManipulationEventData manipEvent)
-    {
-        hideRemoveButton = false;
-        removeButton.SetActive(true);
-    }
-
-    private void ManipulatorHoverExited(ManipulationEventData manipEvent)
-    {
-        hideRemoveButton = true;
-        timeRemainHideRemove = 5;
     }
 }
