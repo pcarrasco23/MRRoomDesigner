@@ -1,27 +1,30 @@
+![Snapshot 07-07-2022 08_06](https://user-images.githubusercontent.com/59579994/177808347-56f71c2e-fc3f-45cc-bbc4-70669b9d0d75.png)
 # MRTK Room Designer
 
-MRTK Room Designer is a Virtual Reality interior design app for Oculus Quest 2 built using Unity and MRTK3.
+MRTK Room Designer is a virtual reality interior design app for Oculus Quest 2 built with Unity 2021 LTS, MRTK3, and Oculus Integration SDK 41. It allows a user to spawn, resize and relocate furniture items in a virtual room.
 
-<img width="742" alt="image" src="https://user-images.githubusercontent.com/59579994/176519038-5da0da68-091e-4528-bf94-eca87a92f901.png">
+![My_project__5__AdobeExpress(2)](https://user-images.githubusercontent.com/59579994/177812494-d9a3a029-f624-4c42-aca5-30365483854a.gif)
+
 
 ## Main Functionality:
 * User can spawn a furniture item into a room.
 * Spawned furniture can be repositioned and resized.
-* Unwanted furniture can be removed.
-* User can reset the room (remove all furniture) to start designing the room again.
+* Unwanted furniture can be removed by throwing it out of the room.
 
 ## How MRTK3 is used:
-* Scrollable furniture menu that shows information of spawns an item of user's choice. 
-* Hand menu (appears when a palm is facing up) that can
-  - toggle off/on the furniture menu
-  - toggle off/on hand mesh
-  - reset the room (removal of all furniture items in the room)
+* The app is targeted for Meta Quest 2 using hand sensors (not the regular controllers).
+* Once the app is loaded and the hands are detected, the player can activate the furniture menu by facing their palms facing upward and shaking them.
+* Once the furniture menu is toggled, a scrollable menu pops up and any furniture item can be spawned by clicking the 'Place it' button.
 
 ## Upcoming Features:
-* More furniture items (with different colors) and room layouts
-* User can make a purchase
-* Depending on the size of the furniture, stock availability is checked.
+* Removing furniture by toggling a button
+* Resetting the room by removing all the furniture
+* Making a purchase
+* More realistic room scenes and actually available furniture items
+* More room layout and furniture items with different colors
+* Stock availability check based on the size of the furniture
+* Saving the project so the user can continue working on it later
 
 ## Links
-* [Project Video - to be inserted later]
+* [Project Video](https://www.youtube.com/watch?time_continue=49&v=50HZ_aweADk&feature=emb_logo)
 * [MRTK3 Documentation](https://docs.microsoft.com/en-us/windows/mixed-reality/mrtk-unity/mrtk3-overview/)
